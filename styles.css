@@ -444,7 +444,7 @@ h3 {
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.tool-card:hover,
+.tool-card:not(.disabled):hover,
 .tool-card.active {
   border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
   box-shadow: 0 14px 30px rgba(16, 32, 29, 0.1);
@@ -465,8 +465,32 @@ h3 {
 }
 
 .tool-card span {
+  display: block;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.tool-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  background: color-mix(in srgb, var(--surface) 72%, var(--border));
+}
+
+.tool-card.disabled svg {
+  color: var(--muted);
+}
+
+.soon-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--muted);
+  padding: 5px 9px;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .workspace-header {

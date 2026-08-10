@@ -1,12 +1,17 @@
 # FileTools
 
-Site estatico com ferramentas online para PDF, imagem, audio de video e QR Code, preparado para deploy no Vercel via GitHub.
+Site estatico com ferramentas online para PDF, preparado para deploy no Vercel via GitHub. As demais categorias ficam visiveis como roadmap e marcadas como "Em breve".
 
-## Ferramentas da primeira versao
+## Ferramentas ativas
 
 - Comprimir PDF
 - Juntar PDF
 - Dividir PDF
+
+PDF usa `pdf-lib` carregado sob demanda por CDN e roda no navegador quando o arquivo e suportado.
+
+## Em breve
+
 - Converter imagem para JPG, PNG e WebP
 - Comprimir imagem
 - Redimensionar imagem
@@ -17,7 +22,7 @@ Site estatico com ferramentas online para PDF, imagem, audio de video e QR Code,
 - Extrair audio de video local
 - Gerar QR Code
 
-As ferramentas de imagem rodam com APIs nativas do navegador. PDF usa `pdf-lib` carregado sob demanda por CDN. QR Code usa biblioteca carregada sob demanda por CDN. Video local usa `MediaRecorder`, `captureStream` e Web Audio quando o navegador suporta o formato enviado. Downloaders de plataformas e YouTube para MP3 exigem backend/API autorizada, alem de validacao de permissao de uso do conteudo.
+As ferramentas futuras permanecem desativadas na interface ate serem implementadas.
 
 ## Estrutura
 

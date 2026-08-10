@@ -340,16 +340,23 @@ function renderTools() {
   });
 
   elements.toolGrid.innerHTML = filtered.map((tool) => `
-    <button class="tool-card ${tool.id === state.active.id ? "active" : ""}" type="button" data-tool="${tool.id}">
+    <button
+      class="tool-card ${tool.id === state.active.id ? "active" : ""} ${isToolAvailable(tool) ? "" : "disabled"}"
+      type="button"
+      data-tool="${tool.id}"
+      ${isToolAvailable(tool) ? "" : 'disabled aria-disabled="true"'}
+    >
       ${icons[tool.category]}
       <strong>${tool.title}</strong>
       <span>${tool.description}</span>
+      ${isToolAvailable(tool) ? "" : '<small class="soon-badge">Em breve</small>'}
     </button>
   `).join("");
 }
 
 function setActiveTool(id) {
   const tool = tools.find((item) => item.id === id) || tools[0];
+  if (!isToolAvailable(tool)) return;
   state.active = tool;
   state.files = [];
   clearResults();
@@ -364,9 +371,14 @@ function setActiveTool(id) {
   elements.dropZone.hidden = ["qr-code", "platform-downloader", "youtube-mp3"].includes(tool.id);
   elements.optionsPanel.innerHTML = tool.options();
   elements.howItWorks.innerHTML = tool.steps.map((step) => `<li>${step}</li>`).join("");
+  elements.runButton.disabled = false;
 
   renderFiles();
   renderTools();
+}
+
+function isToolAvailable(tool) {
+  return tool.category === "pdf";
 }
 
 function renderFiles() {
@@ -383,6 +395,17 @@ function renderFiles() {
       </div>
     </div>
   `).join("");
+}
+
+function isPdfFile(file) {
+  return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
+function validateSelectedFiles(files) {
+  if (state.active.category !== "pdf") return files;
+  const invalid = files.find((file) => !isPdfFile(file));
+  if (invalid) throw new Error(`Use apenas arquivos PDF. Arquivo invalido: ${invalid.name}`);
+  return files;
 }
 
 function renderHistory() {
@@ -450,6 +473,13 @@ function makeUrl(blob) {
 
 async function runTool() {
   clearResults();
+
+  if (!isToolAvailable(state.active)) {
+    elements.resultPanel.hidden = false;
+    elements.resultPanel.innerHTML = '<strong>Em breve</strong><p class="muted">Esta ferramenta ainda nao esta disponivel nesta versao.</p>';
+    return;
+  }
+
   elements.progressWrap.hidden = false;
   elements.runButton.disabled = true;
 
@@ -458,6 +488,7 @@ async function runTool() {
     if (!toolsWithoutFiles.includes(state.active.id) && !state.files.length) {
       throw new Error("Escolha pelo menos um arquivo antes de processar.");
     }
+    validateSelectedFiles(state.files);
 
     const data = getFormData();
     let result;
@@ -946,9 +977,17 @@ document.querySelectorAll("[data-filter]").forEach((button) => {
 });
 
 elements.fileInput.addEventListener("change", (event) => {
-  state.files = Array.from(event.target.files || []);
   clearResults();
-  renderFiles();
+  try {
+    state.files = validateSelectedFiles(Array.from(event.target.files || []));
+    renderFiles();
+  } catch (error) {
+    state.files = [];
+    elements.fileInput.value = "";
+    renderFiles();
+    elements.resultPanel.hidden = false;
+    elements.resultPanel.innerHTML = `<strong>Arquivo invalido</strong><p class="muted">${escapeHtml(error.message)}</p>`;
+  }
 });
 
 ["dragenter", "dragover"].forEach((eventName) => {
@@ -967,10 +1006,18 @@ elements.fileInput.addEventListener("change", (event) => {
 
 elements.dropZone.addEventListener("drop", (event) => {
   const files = Array.from(event.dataTransfer.files || []);
-  state.files = state.active.multiple ? files : files.slice(0, 1);
   elements.fileInput.value = "";
   clearResults();
-  renderFiles();
+  try {
+    const selected = state.active.multiple ? files : files.slice(0, 1);
+    state.files = validateSelectedFiles(selected);
+    renderFiles();
+  } catch (error) {
+    state.files = [];
+    renderFiles();
+    elements.resultPanel.hidden = false;
+    elements.resultPanel.innerHTML = `<strong>Arquivo invalido</strong><p class="muted">${escapeHtml(error.message)}</p>`;
+  }
 });
 
 elements.runButton.addEventListener("click", runTool);

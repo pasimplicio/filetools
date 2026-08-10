@@ -1,4 +1,4 @@
-const CACHE_NAME = "filetools-v1";
+const CACHE_NAME = "filetools-v2";
 const CORE_ASSETS = [
   "/",
   "/index.html",
