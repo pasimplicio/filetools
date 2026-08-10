@@ -1,6 +1,6 @@
 # FileTools
 
-Site estatico com ferramentas online para PDF, preparado para deploy no Vercel via GitHub. As demais categorias ficam visiveis como roadmap e marcadas como "Em breve".
+Site estatico com ferramentas online para PDF, preparado para deploy no Vercel via GitHub. As ferramentas ativas usam bibliotecas open source no navegador; as demais categorias ficam visiveis como roadmap e marcadas como "Em breve".
 
 ## Ferramentas ativas
 
@@ -10,7 +10,7 @@ Site estatico com ferramentas online para PDF, preparado para deploy no Vercel v
 - Remover paginas
 - Girar PDF
 
-As ferramentas de PDF seguem um fluxo inspirado em suites como iLovePDF: escolha a ferramenta, envie arquivos, veja a previa, ajuste as opcoes e processe. PDF usa `pdf-lib` para gerar os arquivos e `pdf.js` para renderizar previas no navegador.
+As ferramentas de PDF seguem um fluxo parecido com suites como iLovePDF: escolha a ferramenta, envie arquivos, veja a previa, ajuste as opcoes e processe. O processamento usa `pdf-lib` e as previas usam `pdf.js`, ambos carregados sob demanda no navegador.
 
 ## Em breve
 
@@ -47,7 +47,7 @@ As ferramentas futuras permanecem desativadas na interface ate serem implementad
 
 ## Rodar localmente
 
-Abrir `index.html` no navegador ja funciona para a interface. Para testar service worker/PWA, use um servidor local:
+Abrir `index.html` no navegador ja funciona para interface, previas e processamento local. Para testar service worker/PWA, use:
 
 ```bash
 npx serve .

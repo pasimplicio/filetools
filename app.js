@@ -30,7 +30,7 @@ const tools = [
     available: true,
     accept: ".pdf,application/pdf",
     multiple: true,
-    mode: "PDF local com pdf-lib",
+    mode: "Open source no navegador",
     buttonLabel: "Comprimir PDF",
     description: "Reduza o tamanho do arquivo mantendo a melhor qualidade possivel no navegador.",
     steps: ["Escolha um ou mais PDFs.", "Selecione o nivel de compressao.", "Baixe os PDFs reduzidos."],
@@ -43,7 +43,7 @@ const tools = [
             <option value="recommended" selected>Recomendada</option>
             <option value="low">Baixa alteracao</option>
           </select>
-          <small>A compressao local regrava a estrutura do PDF. Imagens internas nao sao recomprimidas nesta versao.</small>
+          <small>Usa pdf-lib no navegador. A reducao real depende da estrutura interna do PDF.</small>
         </div>
       </div>`
   },
@@ -55,7 +55,7 @@ const tools = [
     available: true,
     accept: ".pdf,application/pdf",
     multiple: true,
-    mode: "PDF local com pdf-lib",
+    mode: "Open source no navegador",
     buttonLabel: "Juntar PDF",
     description: "Combine PDFs na ordem que voce definir antes de gerar o arquivo final.",
     steps: ["Escolha dois ou mais PDFs.", "Reordene os arquivos se precisar.", "Gere o PDF combinado."],
@@ -69,7 +69,7 @@ const tools = [
     available: true,
     accept: ".pdf,application/pdf",
     multiple: false,
-    mode: "PDF local com pdf-lib",
+    mode: "Open source no navegador",
     buttonLabel: "Dividir PDF",
     description: "Separe paginas por intervalos ou extraia cada pagina como um PDF independente.",
     steps: ["Escolha um PDF.", "Defina intervalos ou extraia todas as paginas.", "Baixe os PDFs gerados."],
@@ -102,7 +102,7 @@ const tools = [
     available: true,
     accept: ".pdf,application/pdf",
     multiple: false,
-    mode: "PDF local com pdf-lib",
+    mode: "Open source no navegador",
     buttonLabel: "Remover paginas",
     description: "Apague paginas especificas e baixe uma nova copia do PDF.",
     steps: ["Escolha um PDF.", "Informe as paginas que devem sair.", "Baixe o PDF sem essas paginas."],
@@ -123,7 +123,7 @@ const tools = [
     available: true,
     accept: ".pdf,application/pdf",
     multiple: false,
-    mode: "PDF local com pdf-lib",
+    mode: "Open source no navegador",
     buttonLabel: "Girar PDF",
     description: "Gire todas as paginas ou apenas paginas selecionadas.",
     steps: ["Escolha um PDF.", "Defina paginas e angulo.", "Baixe o PDF girado."],

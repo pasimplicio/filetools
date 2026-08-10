@@ -4,7 +4,7 @@
   "private": true,
   "description": "Ferramentas online para PDF, imagem, audio de video e QR Code.",
   "scripts": {
-    "check": "node --check app.js",
+    "check": "node --check app.js && node --check sw.js",
     "dev": "npx serve ."
   },
   "keywords": [
