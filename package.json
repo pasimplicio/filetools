@@ -1,0 +1,18 @@
+{
+  "name": "filetools",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ferramentas online para PDF, imagem, audio de video e QR Code.",
+  "scripts": {
+    "check": "node --check app.js",
+    "dev": "npx serve ."
+  },
+  "keywords": [
+    "filetools",
+    "pdf",
+    "image",
+    "qrcode",
+    "vercel"
+  ],
+  "license": "UNLICENSED"
+}

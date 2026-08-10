@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0f766e">
+    <meta
+      name="description"
+      content="FileTools: ferramentas online para PDF, imagem, audio de video e QR Code com foco em privacidade e uso simples."
+    >
+    <title>FileTools | Ferramentas online para PDF, imagem e arquivos</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#workspace">Ir para as ferramentas</a>
+
+    <header class="site-header">
+      <nav class="nav-shell" aria-label="Navegacao principal">
+        <a class="brand" href="#" aria-label="FileTools inicio">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M5 4.75A2.75 2.75 0 0 1 7.75 2h5.5L19 7.75v11.5A2.75 2.75 0 0 1 16.25 22h-8.5A2.75 2.75 0 0 1 5 19.25V4.75Z" />
+              <path d="M13 2.5V7a1 1 0 0 0 1 1h4.5" />
+              <path d="M8.75 13h6.5M8.75 16h4.25" />
+            </svg>
+          </span>
+          <span>FileTools</span>
+        </a>
+
+        <div class="nav-links" aria-label="Secoes">
+          <a href="#tools">Ferramentas</a>
+          <a href="#privacy">Privacidade</a>
+          <a href="#faq">FAQ</a>
+        </div>
+
+        <button class="theme-toggle" type="button" id="themeToggle" aria-label="Alternar tema">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v2M12 19v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M3 12h2M19 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+            <circle cx="12" cy="12" r="4" />
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Ferramentas locais, fluxo direto</p>
+          <h1>Resolva arquivos em poucos cliques.</h1>
+          <p class="hero-text">
+            Comprima PDFs, junte paginas, converta imagens, extraia audio de videos locais e gere QR Codes em uma interface rapida, responsiva e sem cadastro.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#workspace">Comecar agora</a>
+            <a class="button secondary" href="#tools">Ver ferramentas</a>
+          </div>
+        </div>
+
+        <div class="hero-panel" aria-label="Resumo do fluxo">
+          <div class="flow-step active">
+            <span>1</span>
+            <strong>Escolha</strong>
+            <small>PDF, imagem, video ou QR</small>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-step">
+            <span>2</span>
+            <strong>Ajuste</strong>
+            <small>Use opcoes simples</small>
+          </div>
+          <div class="flow-line"></div>
+          <div class="flow-step">
+            <span>3</span>
+            <strong>Baixe</strong>
+            <small>Resultado imediato</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="trust-band" id="privacy" aria-label="Diferenciais">
+        <div>
+          <strong>Privacidade primeiro</strong>
+          <span>Imagens e QR Codes rodam no navegador. PDF e audio usam bibliotecas carregadas sob demanda.</span>
+        </div>
+        <div>
+          <strong>Mobile-first</strong>
+          <span>Fluxo otimizado para celular, tablet e desktop.</span>
+        </div>
+        <div>
+          <strong>Sem cadastro</strong>
+          <span>As ferramentas basicas funcionam sem conta.</span>
+        </div>
+      </section>
+
+      <section class="tools-section" id="tools">
+        <div class="section-heading">
+          <p class="eyebrow">Primeira versao</p>
+          <h2>Ferramentas disponiveis</h2>
+          <p>Use a busca ou escolha uma categoria. A area de trabalho se adapta a cada ferramenta.</p>
+        </div>
+
+        <div class="search-row">
+          <label class="search-box">
+            <span class="sr-only">Buscar ferramenta</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" />
+            </svg>
+            <input id="toolSearch" type="search" placeholder="Buscar por PDF, imagem, audio ou QR">
+          </label>
+          <div class="category-tabs" role="tablist" aria-label="Categorias">
+            <button class="chip active" type="button" data-filter="all">Todas</button>
+            <button class="chip" type="button" data-filter="pdf">PDF</button>
+            <button class="chip" type="button" data-filter="image">Imagem</button>
+            <button class="chip" type="button" data-filter="media">Video</button>
+            <button class="chip" type="button" data-filter="qr">QR</button>
+          </div>
+        </div>
+
+        <div class="tool-grid" id="toolGrid" aria-label="Lista de ferramentas"></div>
+      </section>
+
+      <section class="workspace-section" id="workspace">
+        <div class="workspace-header">
+          <div>
+            <p class="eyebrow">Area de trabalho</p>
+            <h2 id="workspaceTitle">Comprimir PDF</h2>
+          </div>
+          <span class="status-pill" id="processingMode">Processamento local</span>
+        </div>
+
+        <div class="workspace-layout">
+          <article class="tool-workbench" aria-live="polite">
+            <div class="tool-intro">
+              <div class="tool-icon" id="activeIcon" aria-hidden="true"></div>
+              <div>
+                <h3 id="activeTitle">Comprimir PDF</h3>
+                <p id="activeDescription">Reduza e reorganize um PDF no navegador quando possivel.</p>
+              </div>
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+              <input id="fileInput" type="file" aria-label="Escolher arquivos">
+              <div class="drop-content">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 16V4M7 9l5-5 5 5" />
+                  <path d="M5 16v2.25A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25V16" />
+                </svg>
+                <strong>Arraste arquivos aqui</strong>
+                <span>ou clique para escolher do dispositivo</span>
+              </div>
+            </div>
+
+            <div class="file-list" id="fileList" aria-label="Arquivos selecionados"></div>
+
+            <form class="options-panel" id="optionsPanel"></form>
+
+            <div class="progress-wrap" id="progressWrap" hidden>
+              <div class="progress-label">
+                <span id="progressText">Processando...</span>
+                <span id="progressPercent">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-bar" id="progressBar"></div>
+              </div>
+            </div>
+
+            <div class="result-panel" id="resultPanel" hidden></div>
+
+            <div class="action-row">
+              <button class="button secondary" type="button" id="clearButton">Limpar</button>
+              <button class="button primary" type="button" id="runButton">Processar</button>
+            </div>
+          </article>
+
+          <aside class="side-panel">
+            <section>
+              <h3>Como funciona</h3>
+              <ol id="howItWorks">
+                <li>Escolha um arquivo compativel.</li>
+                <li>Ajuste as opcoes principais.</li>
+                <li>Processe e baixe o resultado.</li>
+              </ol>
+            </section>
+            <section>
+              <h3>Historico local</h3>
+              <div class="history-list" id="historyList">
+                <p class="muted">Seus ultimos resultados aparecem aqui neste navegador.</p>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="faq-section" id="faq">
+        <div class="section-heading">
+          <p class="eyebrow">Duvidas rapidas</p>
+          <h2>FAQ</h2>
+        </div>
+        <div class="faq-grid">
+          <details>
+            <summary>Meus arquivos sao enviados para um servidor?</summary>
+            <p>As ferramentas de imagem e QR Code rodam localmente. PDF e audio tambem tentam operar no navegador, usando bibliotecas carregadas sob demanda.</p>
+          </details>
+          <details>
+            <summary>Funciona no celular?</summary>
+            <p>Sim. O fluxo foi desenhado primeiro para telas pequenas, com botoes grandes e opcoes progressivas.</p>
+          </details>
+          <details>
+            <summary>Por que algumas tarefas demoram?</summary>
+            <p>Arquivos grandes exigem mais memoria e processamento do navegador. A interface mostra progresso e orienta quando uma biblioteca externa precisa carregar.</p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>FileTools</span>
+      <span>Ferramentas simples para arquivos do dia a dia.</span>
+    </footer>
+
+    <script defer src="app.js"></script>
+  </body>
+</html>
