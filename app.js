@@ -10,25 +10,38 @@ const icons = {
   qr: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 14h2v4h-2zM14 18h4v2h-4z"/></svg>'
 };
 
+const groupLabels = {
+  organize: "Organizar PDF",
+  optimize: "Otimizar PDF",
+  convert: "Converter PDF",
+  edit: "Editar PDF",
+  security: "Seguranca PDF",
+  other: "Outras ferramentas"
+};
+
 const tools = [
   {
     id: "compress-pdf",
     title: "Comprimir PDF",
     category: "pdf",
+    group: "optimize",
+    available: true,
     accept: ".pdf,application/pdf",
-    multiple: false,
+    multiple: true,
     mode: "PDF local com pdf-lib",
-    description: "Regrava o PDF com estrutura otimizada. Ideal para reducoes leves e arquivos simples.",
-    steps: ["Escolha um PDF.", "Selecione o nivel de otimizacao.", "Baixe o PDF regravado."],
+    buttonLabel: "Comprimir PDF",
+    description: "Reduza o tamanho do arquivo mantendo a melhor qualidade possivel no navegador.",
+    steps: ["Escolha um ou mais PDFs.", "Selecione o nivel de compressao.", "Baixe os PDFs reduzidos."],
     options: () => `
-      <div class="option-grid">
+      <div class="option-grid compression-options">
         <div class="field">
-          <label for="pdfLevel">Nivel</label>
+          <label for="pdfLevel">Nivel de compressao</label>
           <select id="pdfLevel" name="pdfLevel">
-            <option value="balanced">Recomendado</option>
-            <option value="maximum">Maximo possivel no navegador</option>
+            <option value="extreme">Maxima local</option>
+            <option value="recommended" selected>Recomendada</option>
+            <option value="low">Baixa alteracao</option>
           </select>
-          <small>Compressao real depende da estrutura interna do PDF.</small>
+          <small>A compressao local regrava a estrutura do PDF. Imagens internas nao sao recomprimidas nesta versao.</small>
         </div>
       </div>`
   },
@@ -36,35 +49,170 @@ const tools = [
     id: "merge-pdf",
     title: "Juntar PDF",
     category: "pdf",
+    group: "organize",
+    available: true,
     accept: ".pdf,application/pdf",
     multiple: true,
     mode: "PDF local com pdf-lib",
-    description: "Combine dois ou mais PDFs em um unico arquivo, preservando a ordem escolhida.",
-    steps: ["Escolha dois ou mais PDFs.", "Confira a ordem dos arquivos.", "Gere o PDF final."],
-    options: () => '<p class="muted">Os PDFs serao unidos na ordem em que aparecem na lista.</p>'
+    buttonLabel: "Juntar PDF",
+    description: "Combine PDFs na ordem que voce definir antes de gerar o arquivo final.",
+    steps: ["Escolha dois ou mais PDFs.", "Reordene os arquivos se precisar.", "Gere o PDF combinado."],
+    options: () => '<p class="muted">Use as setas na lista de arquivos para ajustar a ordem antes de juntar.</p>'
   },
   {
     id: "split-pdf",
     title: "Dividir PDF",
     category: "pdf",
+    group: "organize",
+    available: true,
     accept: ".pdf,application/pdf",
     multiple: false,
     mode: "PDF local com pdf-lib",
-    description: "Extraia paginas especificas de um PDF e salve um novo arquivo.",
-    steps: ["Escolha um PDF.", "Informe paginas ou intervalos.", "Baixe o novo PDF."],
+    buttonLabel: "Dividir PDF",
+    description: "Separe paginas por intervalos ou extraia cada pagina como um PDF independente.",
+    steps: ["Escolha um PDF.", "Defina intervalos ou extraia todas as paginas.", "Baixe os PDFs gerados."],
     options: () => `
       <div class="option-grid">
         <div class="field">
-          <label for="pageRanges">Paginas</label>
+          <label for="splitMode">Modo</label>
+          <select id="splitMode" name="splitMode">
+            <option value="ranges">Dividir por intervalos</option>
+            <option value="extract-all">Extrair todas as paginas</option>
+          </select>
+          <small>Intervalos podem virar um unico PDF ou varios arquivos.</small>
+        </div>
+        <div class="field">
+          <label for="pageRanges">Intervalos</label>
           <input id="pageRanges" name="pageRanges" value="1" placeholder="Ex: 1-3, 5, 8-10">
           <small>Use numeros e intervalos separados por virgula.</small>
         </div>
+        <label class="check-row">
+          <input id="mergeRanges" name="mergeRanges" type="checkbox" value="yes" checked>
+          <span>Unir intervalos em um unico PDF.</span>
+        </label>
       </div>`
+  },
+  {
+    id: "remove-pages",
+    title: "Remover paginas",
+    category: "pdf",
+    group: "organize",
+    available: true,
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    mode: "PDF local com pdf-lib",
+    buttonLabel: "Remover paginas",
+    description: "Apague paginas especificas e baixe uma nova copia do PDF.",
+    steps: ["Escolha um PDF.", "Informe as paginas que devem sair.", "Baixe o PDF sem essas paginas."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="removeRanges">Paginas para remover</label>
+          <input id="removeRanges" name="removeRanges" value="1" placeholder="Ex: 2, 4-6, 9">
+          <small>As paginas restantes permanecem na ordem original.</small>
+        </div>
+      </div>`
+  },
+  {
+    id: "rotate-pdf",
+    title: "Girar PDF",
+    category: "pdf",
+    group: "edit",
+    available: true,
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    mode: "PDF local com pdf-lib",
+    buttonLabel: "Girar PDF",
+    description: "Gire todas as paginas ou apenas paginas selecionadas.",
+    steps: ["Escolha um PDF.", "Defina paginas e angulo.", "Baixe o PDF girado."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="rotatePages">Paginas</label>
+          <input id="rotatePages" name="rotatePages" value="todas" placeholder="todas ou Ex: 1, 3-5">
+          <small>Use "todas" para aplicar no documento inteiro.</small>
+        </div>
+        <div class="field">
+          <label for="rotationDegrees">Rotacao</label>
+          <select id="rotationDegrees" name="rotationDegrees">
+            <option value="90">90 graus para a direita</option>
+            <option value="180">180 graus</option>
+            <option value="270">90 graus para a esquerda</option>
+          </select>
+        </div>
+      </div>`
+  },
+  {
+    id: "organize-pdf",
+    title: "Organizar PDF",
+    category: "pdf",
+    group: "organize",
+    available: false,
+    accept: ".pdf,application/pdf",
+    multiple: true,
+    mode: "Em breve",
+    description: "Reordene paginas visualmente, remova paginas e combine documentos em uma unica etapa.",
+    steps: ["Em breve."],
+    options: soonOptions
+  },
+  {
+    id: "pdf-to-jpg",
+    title: "PDF para JPG",
+    category: "pdf",
+    group: "convert",
+    available: false,
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    mode: "Em breve",
+    description: "Converta paginas do PDF em imagens JPG.",
+    steps: ["Em breve."],
+    options: soonOptions
+  },
+  {
+    id: "jpg-to-pdf",
+    title: "JPG para PDF",
+    category: "pdf",
+    group: "convert",
+    available: false,
+    accept: "image/jpeg,image/png,image/webp",
+    multiple: true,
+    mode: "Em breve",
+    description: "Transforme imagens em um documento PDF.",
+    steps: ["Em breve."],
+    options: soonOptions
+  },
+  {
+    id: "protect-pdf",
+    title: "Proteger PDF",
+    category: "pdf",
+    group: "security",
+    available: false,
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    mode: "Em breve",
+    description: "Adicione senha ao PDF antes de compartilhar.",
+    steps: ["Em breve."],
+    options: soonOptions
+  },
+  {
+    id: "unlock-pdf",
+    title: "Desbloquear PDF",
+    category: "pdf",
+    group: "security",
+    available: false,
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    mode: "Em breve",
+    description: "Remova restricoes quando voce tiver permissao e a senha correta.",
+    steps: ["Em breve."],
+    options: soonOptions
   },
   {
     id: "convert-image",
     title: "Converter imagem",
     category: "image",
+    group: "other",
+    available: false,
     accept: "image/*",
     multiple: true,
     mode: "100% no navegador",
@@ -76,6 +224,8 @@ const tools = [
     id: "compress-image",
     title: "Comprimir imagem",
     category: "image",
+    group: "other",
+    available: false,
     accept: "image/*",
     multiple: true,
     mode: "100% no navegador",
@@ -87,6 +237,8 @@ const tools = [
     id: "resize-image",
     title: "Redimensionar imagem",
     category: "image",
+    group: "other",
+    available: false,
     accept: "image/*",
     multiple: true,
     mode: "100% no navegador",
@@ -121,6 +273,8 @@ const tools = [
     id: "convert-video",
     title: "Converter video",
     category: "media",
+    group: "other",
+    available: false,
     accept: ".mp4,.mov,.mkv,.webm,.avi,.m4v,video/*",
     multiple: false,
     mode: "Video local quando suportado",
@@ -145,6 +299,8 @@ const tools = [
     id: "platform-downloader",
     title: "Downloader de plataformas",
     category: "media",
+    group: "other",
+    available: false,
     accept: "",
     multiple: false,
     mode: "Requer backend/API autorizada",
@@ -176,6 +332,8 @@ const tools = [
     id: "youtube-mp3",
     title: "YouTube para MP3",
     category: "media",
+    group: "other",
+    available: false,
     accept: "",
     multiple: false,
     mode: "Requer backend/API autorizada",
@@ -205,6 +363,8 @@ const tools = [
     id: "trim-video",
     title: "Cortador de video",
     category: "media",
+    group: "other",
+    available: false,
     accept: ".mp4,.mov,.mkv,.webm,.avi,.m4v,video/*",
     multiple: false,
     mode: "Corte local quando suportado",
@@ -234,6 +394,8 @@ const tools = [
     id: "extract-audio",
     title: "Extrair audio de video",
     category: "media",
+    group: "other",
+    available: false,
     accept: "video/*",
     multiple: false,
     mode: "Audio local em WebM",
@@ -246,6 +408,8 @@ const tools = [
     id: "qr-code",
     title: "Gerar QR Code",
     category: "qr",
+    group: "other",
+    available: false,
     accept: "",
     multiple: false,
     mode: "Texto local no navegador",
@@ -331,11 +495,15 @@ function imageOptions(defaultFormat, defaultQuality, includeMaxWidth) {
     </div>`;
 }
 
+function soonOptions() {
+  return '<p class="muted">Esta ferramenta esta no roadmap e sera liberada em breve.</p>';
+}
+
 function renderTools() {
   const query = elements.toolSearch.value.trim().toLowerCase();
   const filtered = tools.filter((tool) => {
-    const matchCategory = state.filter === "all" || tool.category === state.filter;
-    const matchText = [tool.title, tool.description, tool.category].join(" ").toLowerCase().includes(query);
+    const matchCategory = state.filter === "all" || tool.group === state.filter || tool.category === state.filter;
+    const matchText = [tool.title, tool.description, tool.category, groupLabels[tool.group]].join(" ").toLowerCase().includes(query);
     return matchCategory && matchText;
   });
 
@@ -347,6 +515,7 @@ function renderTools() {
       ${isToolAvailable(tool) ? "" : 'disabled aria-disabled="true"'}
     >
       ${icons[tool.category]}
+      <small class="tool-group">${groupLabels[tool.group] || "Ferramenta"}</small>
       <strong>${tool.title}</strong>
       <span>${tool.description}</span>
       ${isToolAvailable(tool) ? "" : '<small class="soon-badge">Em breve</small>'}
@@ -371,6 +540,7 @@ function setActiveTool(id) {
   elements.dropZone.hidden = ["qr-code", "platform-downloader", "youtube-mp3"].includes(tool.id);
   elements.optionsPanel.innerHTML = tool.options();
   elements.howItWorks.innerHTML = tool.steps.map((step) => `<li>${step}</li>`).join("");
+  elements.runButton.textContent = tool.buttonLabel || "Processar";
   elements.runButton.disabled = false;
 
   renderFiles();
@@ -378,7 +548,7 @@ function setActiveTool(id) {
 }
 
 function isToolAvailable(tool) {
-  return tool.category === "pdf";
+  return tool.available === true;
 }
 
 function renderFiles() {
@@ -387,11 +557,18 @@ function renderFiles() {
     return;
   }
 
-  elements.fileList.innerHTML = state.files.map((file) => `
+  elements.fileList.innerHTML = state.files.map((file, index) => `
     <div class="file-item">
       <div>
-        <strong>${escapeHtml(file.name)}</strong>
+        <strong><span class="file-order">${index + 1}</span>${escapeHtml(file.name)}</strong>
         <span>${formatBytes(file.size)} - ${file.type || "tipo desconhecido"}</span>
+      </div>
+      <div class="file-actions" aria-label="Acoes para ${escapeHtml(file.name)}">
+        ${state.active.multiple && state.files.length > 1 ? `
+          <button type="button" data-file-action="up" data-file-index="${index}" aria-label="Mover ${escapeHtml(file.name)} para cima" ${index === 0 ? "disabled" : ""}>Subir</button>
+          <button type="button" data-file-action="down" data-file-index="${index}" aria-label="Mover ${escapeHtml(file.name)} para baixo" ${index === state.files.length - 1 ? "disabled" : ""}>Descer</button>
+        ` : ""}
+        <button type="button" data-file-action="remove" data-file-index="${index}" aria-label="Remover ${escapeHtml(file.name)}">Remover</button>
       </div>
     </div>
   `).join("");
@@ -497,6 +674,8 @@ async function runTool() {
     if (state.active.id === "compress-pdf") result = await compressPdf(data);
     if (state.active.id === "merge-pdf") result = await mergePdf();
     if (state.active.id === "split-pdf") result = await splitPdf(data);
+    if (state.active.id === "remove-pages") result = await removePages(data);
+    if (state.active.id === "rotate-pdf") result = await rotatePdf(data);
     if (state.active.id === "convert-video") result = await convertVideo(data);
     if (state.active.id === "trim-video") result = await trimVideo(data);
     if (state.active.id === "platform-downloader") result = await preparePlatformDownload(data);
@@ -542,25 +721,39 @@ async function processImages(data) {
   };
 }
 
-async function compressPdf() {
+async function compressPdf(data = {}) {
   await ensurePdfLib();
-  const file = state.files[0];
-  setProgress(20, "Lendo PDF");
-  const bytes = await file.arrayBuffer();
-  const pdf = await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
-  setProgress(58, "Regravando estrutura");
-  pdf.setProducer("FileTools");
-  pdf.setCreator("FileTools");
-  const saved = await pdf.save({ useObjectStreams: true, addDefaultPage: false });
-  const blob = new Blob([saved], { type: "application/pdf" });
-  const name = `${baseName(file.name)}-otimizado.pdf`;
-  const delta = file.size - blob.size;
-  const reduced = delta > 0 ? `${formatBytes(delta)} menor` : "sem reducao relevante";
+  const levelLabels = {
+    extreme: "compressao maxima local",
+    recommended: "compressao recomendada",
+    low: "baixa alteracao"
+  };
+  const links = [];
+  let originalTotal = 0;
+  let finalTotal = 0;
+
+  for (let index = 0; index < state.files.length; index += 1) {
+    const file = state.files[index];
+    originalTotal += file.size;
+    setProgress(15 + (index / state.files.length) * 72, `Otimizando ${file.name}`);
+    const bytes = await file.arrayBuffer();
+    const pdf = await PDFLib.PDFDocument.load(bytes, { ignoreEncryption: true });
+    pdf.setProducer("FileTools");
+    pdf.setCreator("FileTools");
+    const saved = await pdf.save({ useObjectStreams: true, addDefaultPage: false });
+    const blob = new Blob([saved], { type: "application/pdf" });
+    finalTotal += blob.size;
+    const name = `${baseName(file.name)}-otimizado.pdf`;
+    links.push({ url: makeUrl(blob), name, label: `Baixar ${name}` });
+  }
+
+  const delta = originalTotal - finalTotal;
+  const reduced = delta > 0 ? `${formatBytes(delta)} menor no total` : "sem reducao relevante";
 
   return {
     title: "PDF otimizado",
-    description: `Arquivo final: ${formatBytes(blob.size)} (${reduced}).`,
-    links: [{ url: makeUrl(blob), name, label: "Baixar PDF" }]
+    description: `${links.length} arquivo(s) processado(s). Resultado: ${formatBytes(finalTotal)} (${reduced}) com ${levelLabels[data.pdfLevel] || "compressao recomendada"}.`,
+    links
   };
 }
 
@@ -591,18 +784,114 @@ async function splitPdf(data) {
   const file = state.files[0];
   setProgress(20, "Lendo PDF");
   const source = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const indices = parsePageRanges(data.pageRanges || "1", source.getPageCount());
-  const output = await PDFLib.PDFDocument.create();
-  const pages = await output.copyPages(source, indices);
-  pages.forEach((page) => output.addPage(page));
-  setProgress(78, "Gerando novo PDF");
-  const saved = await output.save({ useObjectStreams: true });
-  const blob = new Blob([saved], { type: "application/pdf" });
-  const name = `${baseName(file.name)}-paginas.pdf`;
+
+  if (data.splitMode === "extract-all") {
+    const links = [];
+    const total = source.getPageCount();
+    for (let index = 0; index < total; index += 1) {
+      setProgress(20 + (index / total) * 70, `Extraindo pagina ${index + 1}`);
+      const output = await PDFLib.PDFDocument.create();
+      const [page] = await output.copyPages(source, [index]);
+      output.addPage(page);
+      const saved = await output.save({ useObjectStreams: true });
+      const blob = new Blob([saved], { type: "application/pdf" });
+      const name = `${baseName(file.name)}-pagina-${index + 1}.pdf`;
+      links.push({ url: makeUrl(blob), name, label: `Baixar pagina ${index + 1}` });
+    }
+    return {
+      title: "PDF dividido",
+      description: `${links.length} pagina(s) extraida(s) em arquivos separados.`,
+      links
+    };
+  }
+
+  const ranges = parsePageRangeGroups(data.pageRanges || "1", source.getPageCount());
+  const mergeRanges = data.mergeRanges === "yes";
+
+  if (mergeRanges) {
+    const indices = uniqueIndices(ranges.flat());
+    const output = await PDFLib.PDFDocument.create();
+    const pages = await output.copyPages(source, indices);
+    pages.forEach((page) => output.addPage(page));
+    setProgress(78, "Gerando novo PDF");
+    const saved = await output.save({ useObjectStreams: true });
+    const blob = new Blob([saved], { type: "application/pdf" });
+    const name = `${baseName(file.name)}-paginas.pdf`;
+
+    return {
+      title: "PDF dividido",
+      description: `${indices.length} pagina(s) extraida(s) em um unico PDF.`,
+      links: [{ url: makeUrl(blob), name, label: "Baixar PDF" }]
+    };
+  }
+
+  const links = [];
+  for (let index = 0; index < ranges.length; index += 1) {
+    setProgress(30 + (index / ranges.length) * 60, `Gerando intervalo ${index + 1}`);
+    const output = await PDFLib.PDFDocument.create();
+    const pages = await output.copyPages(source, ranges[index]);
+    pages.forEach((page) => output.addPage(page));
+    const saved = await output.save({ useObjectStreams: true });
+    const blob = new Blob([saved], { type: "application/pdf" });
+    const name = `${baseName(file.name)}-intervalo-${index + 1}.pdf`;
+    links.push({ url: makeUrl(blob), name, label: `Baixar intervalo ${index + 1}` });
+  }
 
   return {
     title: "PDF dividido",
-    description: `${indices.length} pagina(s) extraida(s).`,
+    description: `${links.length} arquivo(s) gerado(s) a partir dos intervalos informados.`,
+    links
+  };
+}
+
+async function removePages(data) {
+  await ensurePdfLib();
+  const file = state.files[0];
+  setProgress(20, "Lendo PDF");
+  const source = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const pageCount = source.getPageCount();
+  const removed = new Set(parsePageRanges(data.removeRanges || "", pageCount));
+  if (removed.size >= pageCount) throw new Error("Mantenha pelo menos uma pagina no PDF.");
+  const kept = source.getPageIndices().filter((index) => !removed.has(index));
+  const output = await PDFLib.PDFDocument.create();
+  const pages = await output.copyPages(source, kept);
+  pages.forEach((page) => output.addPage(page));
+  setProgress(78, "Gerando PDF");
+  const saved = await output.save({ useObjectStreams: true });
+  const blob = new Blob([saved], { type: "application/pdf" });
+  const name = `${baseName(file.name)}-sem-paginas.pdf`;
+
+  return {
+    title: "Paginas removidas",
+    description: `${removed.size} pagina(s) removida(s). O novo PDF ficou com ${kept.length} pagina(s).`,
+    links: [{ url: makeUrl(blob), name, label: "Baixar PDF" }]
+  };
+}
+
+async function rotatePdf(data) {
+  await ensurePdfLib();
+  const file = state.files[0];
+  setProgress(20, "Lendo PDF");
+  const pdf = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const pageCount = pdf.getPageCount();
+  const input = String(data.rotatePages || "todas").trim().toLowerCase();
+  const indices = ["todas", "todos", "all"].includes(input) ? pdf.getPageIndices() : parsePageRanges(input, pageCount);
+  const degrees = Number(data.rotationDegrees || 90);
+  const pages = pdf.getPages();
+
+  indices.forEach((index) => {
+    const current = pages[index].getRotation().angle || 0;
+    pages[index].setRotation(PDFLib.degrees((current + degrees) % 360));
+  });
+
+  setProgress(78, "Aplicando rotacao");
+  const saved = await pdf.save({ useObjectStreams: true });
+  const blob = new Blob([saved], { type: "application/pdf" });
+  const name = `${baseName(file.name)}-girado.pdf`;
+
+  return {
+    title: "PDF girado",
+    description: `${indices.length} pagina(s) girada(s) em ${degrees} graus.`,
     links: [{ url: makeUrl(blob), name, label: "Baixar PDF" }]
   };
 }
@@ -891,16 +1180,27 @@ function drawImageToBlob(image, dimensions, format, quality) {
 }
 
 function parsePageRanges(input, pageCount) {
-  const selected = new Set();
-  input.split(",").map((part) => part.trim()).filter(Boolean).forEach((part) => {
+  const selected = new Set(parsePageRangeGroups(input, pageCount).flat());
+  if (!selected.size) throw new Error("Informe pelo menos uma pagina valida.");
+  return Array.from(selected);
+}
+
+function parsePageRangeGroups(input, pageCount) {
+  const groups = input.split(",").map((part) => part.trim()).filter(Boolean).map((part) => {
     const [startRaw, endRaw] = part.split("-").map((value) => Number(value.trim()));
     if (!startRaw || startRaw < 1 || startRaw > pageCount) throw new Error(`Pagina invalida: ${part}`);
     const end = endRaw || startRaw;
     if (end < startRaw || end > pageCount) throw new Error(`Intervalo invalido: ${part}`);
-    for (let page = startRaw; page <= end; page += 1) selected.add(page - 1);
+    const indices = [];
+    for (let page = startRaw; page <= end; page += 1) indices.push(page - 1);
+    return indices;
   });
-  if (!selected.size) throw new Error("Informe pelo menos uma pagina valida.");
-  return Array.from(selected);
+  if (!groups.length) throw new Error("Informe pelo menos uma pagina valida.");
+  return groups;
+}
+
+function uniqueIndices(indices) {
+  return Array.from(new Set(indices));
 }
 
 function waitFor(target, eventName) {
@@ -988,6 +1288,26 @@ elements.fileInput.addEventListener("change", (event) => {
     elements.resultPanel.hidden = false;
     elements.resultPanel.innerHTML = `<strong>Arquivo invalido</strong><p class="muted">${escapeHtml(error.message)}</p>`;
   }
+});
+
+elements.fileList.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-file-action]");
+  if (!button) return;
+  const index = Number(button.dataset.fileIndex);
+  const action = button.dataset.fileAction;
+  if (!Number.isInteger(index) || index < 0 || index >= state.files.length) return;
+
+  if (action === "remove") {
+    state.files.splice(index, 1);
+  } else if (action === "up" && index > 0) {
+    [state.files[index - 1], state.files[index]] = [state.files[index], state.files[index - 1]];
+  } else if (action === "down" && index < state.files.length - 1) {
+    [state.files[index + 1], state.files[index]] = [state.files[index], state.files[index + 1]];
+  }
+
+  elements.fileInput.value = "";
+  clearResults();
+  renderFiles();
 });
 
 ["dragenter", "dragover"].forEach((eventName) => {

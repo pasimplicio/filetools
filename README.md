@@ -7,11 +7,18 @@ Site estatico com ferramentas online para PDF, preparado para deploy no Vercel v
 - Comprimir PDF
 - Juntar PDF
 - Dividir PDF
+- Remover paginas
+- Girar PDF
 
-PDF usa `pdf-lib` carregado sob demanda por CDN e roda no navegador quando o arquivo e suportado.
+As ferramentas de PDF seguem um fluxo inspirado em suites como iLovePDF: escolha a ferramenta, envie arquivos, ajuste as opcoes e processe. PDF usa `pdf-lib` carregado sob demanda por CDN e roda no navegador quando o arquivo e suportado.
 
 ## Em breve
 
+- Organizar PDF visualmente
+- PDF para JPG
+- JPG para PDF
+- Proteger PDF
+- Desbloquear PDF
 - Converter imagem para JPG, PNG e WebP
 - Comprimir imagem
 - Redimensionar imagem
