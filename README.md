@@ -10,7 +10,7 @@ Site estatico com ferramentas online para PDF, preparado para deploy no Vercel v
 - Remover paginas
 - Girar PDF
 
-As ferramentas de PDF seguem um fluxo inspirado em suites como iLovePDF: escolha a ferramenta, envie arquivos, ajuste as opcoes e processe. PDF usa `pdf-lib` carregado sob demanda por CDN e roda no navegador quando o arquivo e suportado.
+As ferramentas de PDF seguem um fluxo inspirado em suites como iLovePDF: escolha a ferramenta, envie arquivos, veja a previa, ajuste as opcoes e processe. PDF usa `pdf-lib` para gerar os arquivos e `pdf.js` para renderizar previas no navegador.
 
 ## Em breve
 

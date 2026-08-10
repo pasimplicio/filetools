@@ -1,5 +1,7 @@
 const cdn = {
   pdfLib: "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js",
+  pdfJs: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs",
+  pdfJsWorker: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs",
   qrCode: "https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"
 };
 
@@ -443,6 +445,7 @@ const state = {
   files: [],
   filter: "all",
   history: JSON.parse(localStorage.getItem("filetools-history") || "[]"),
+  previewToken: 0,
   urls: []
 };
 
@@ -552,6 +555,9 @@ function isToolAvailable(tool) {
 }
 
 function renderFiles() {
+  state.previewToken += 1;
+  const token = state.previewToken;
+
   if (!state.files.length) {
     elements.fileList.innerHTML = "";
     return;
@@ -570,8 +576,13 @@ function renderFiles() {
         ` : ""}
         <button type="button" data-file-action="remove" data-file-index="${index}" aria-label="Remover ${escapeHtml(file.name)}">Remover</button>
       </div>
+      <div class="pdf-preview input-preview" data-file-preview="${index}" aria-live="polite">
+        <p class="muted">Carregando previa...</p>
+      </div>
     </div>
   `).join("");
+
+  renderInputPdfPreviews(token);
 }
 
 function isPdfFile(file) {
@@ -583,6 +594,29 @@ function validateSelectedFiles(files) {
   const invalid = files.find((file) => !isPdfFile(file));
   if (invalid) throw new Error(`Use apenas arquivos PDF. Arquivo invalido: ${invalid.name}`);
   return files;
+}
+
+async function renderInputPdfPreviews(token) {
+  if (state.active.category !== "pdf" || !state.files.length) return;
+
+  try {
+    await ensurePdfJs();
+    await Promise.all(state.files.map(async (file, index) => {
+      const target = elements.fileList.querySelector(`[data-file-preview="${index}"]`);
+      if (!target || token !== state.previewToken) return;
+      await renderPdfPreview({
+        source: await file.arrayBuffer(),
+        target,
+        title: "Previa do arquivo",
+        maxPages: state.active.id === "merge-pdf" || state.files.length > 1 ? 1 : 4
+      });
+    }));
+  } catch (error) {
+    if (token !== state.previewToken) return;
+    elements.fileList.querySelectorAll("[data-file-preview]").forEach((target) => {
+      target.innerHTML = `<p class="muted">Nao foi possivel carregar a previa: ${escapeHtml(error.message)}</p>`;
+    });
+  }
 }
 
 function renderHistory() {
@@ -622,13 +656,26 @@ function getFormData() {
 
 function showResult(title, description, links) {
   elements.resultPanel.hidden = false;
+  const pdfLinks = links.filter((link) => /\.pdf$/i.test(link.name || ""));
   elements.resultPanel.innerHTML = `
     <strong>${title}</strong>
     <p class="muted">${description}</p>
+    ${pdfLinks.length ? `
+      <div class="result-preview-wrap">
+        <div class="result-preview-heading">
+          <strong>Previa do resultado</strong>
+          <span>${pdfLinks.length > 1 ? `${pdfLinks.length} PDFs gerados` : "PDF final"}</span>
+        </div>
+        <div class="result-previews" id="resultPreviews" aria-live="polite">
+          <p class="muted">Carregando previa do resultado...</p>
+        </div>
+      </div>
+    ` : ""}
     <div class="result-actions" ${links.length ? "" : "hidden"}>
       ${links.map((link) => `<a class="download-link" href="${link.url}" download="${link.name}">${link.label || "Baixar"}</a>`).join("")}
     </div>
   `;
+  if (pdfLinks.length) renderResultPdfPreviews(pdfLinks);
 }
 
 function addHistory(fileName) {
@@ -1102,6 +1149,100 @@ async function ensurePdfLib() {
   if (window.PDFLib) return;
   setProgress(8, "Carregando biblioteca de PDF");
   await loadScript(cdn.pdfLib);
+}
+
+async function ensurePdfJs() {
+  if (!window.pdfjsLib) {
+    window.pdfjsLib = await import(cdn.pdfJs);
+  }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = cdn.pdfJsWorker;
+}
+
+async function renderResultPdfPreviews(pdfLinks) {
+  const container = document.querySelector("#resultPreviews");
+  if (!container) return;
+
+  try {
+    await ensurePdfJs();
+    container.innerHTML = "";
+
+    if (pdfLinks.length === 1) {
+      await renderPdfPreview({
+        source: pdfLinks[0].url,
+        target: container,
+        title: pdfLinks[0].name,
+        maxPages: 6
+      });
+      return;
+    }
+
+    await Promise.all(pdfLinks.map(async (link, index) => {
+      const item = document.createElement("div");
+      item.className = "result-preview-item";
+      item.innerHTML = `<strong>${escapeHtml(link.name)}</strong><div class="pdf-preview"><p class="muted">Carregando previa...</p></div>`;
+      container.appendChild(item);
+      await renderPdfPreview({
+        source: link.url,
+        target: item.querySelector(".pdf-preview"),
+        title: `Resultado ${index + 1}`,
+        maxPages: 1
+      });
+    }));
+  } catch (error) {
+    container.innerHTML = `<p class="muted">Nao foi possivel carregar a previa do resultado: ${escapeHtml(error.message)}</p>`;
+  }
+}
+
+async function renderPdfPreview({ source, target, title, maxPages }) {
+  const pdfjs = window.pdfjsLib;
+  const documentSource = typeof source === "string"
+    ? { url: source }
+    : { data: new Uint8Array(source) };
+  const loadingTask = pdfjs.getDocument(documentSource);
+  const pdf = await loadingTask.promise;
+  const totalPages = pdf.numPages;
+  const pageLimit = Math.max(1, Math.min(totalPages, maxPages || 1));
+  target.innerHTML = `
+    <div class="pdf-preview-header">
+      <strong>${escapeHtml(title)}</strong>
+      <span>${totalPages} pagina(s)</span>
+    </div>
+    <div class="pdf-preview-pages"></div>
+  `;
+  const pagesWrap = target.querySelector(".pdf-preview-pages");
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+  for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 0.28 });
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = Math.floor(viewport.width * pixelRatio);
+    canvas.height = Math.floor(viewport.height * pixelRatio);
+    canvas.style.width = `${Math.floor(viewport.width)}px`;
+    canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+    const pageCard = document.createElement("figure");
+    pageCard.className = "pdf-page-thumb";
+    pageCard.appendChild(canvas);
+    const caption = document.createElement("figcaption");
+    caption.textContent = `Pagina ${pageNumber}`;
+    pageCard.appendChild(caption);
+    pagesWrap.appendChild(pageCard);
+
+    await page.render({
+      canvasContext: context,
+      viewport,
+      transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0]
+    }).promise;
+  }
+
+  if (totalPages > pageLimit) {
+    const more = document.createElement("div");
+    more.className = "pdf-more-pages";
+    more.textContent = `+${totalPages - pageLimit} pagina(s)`;
+    pagesWrap.appendChild(more);
+  }
 }
 
 async function ensureQrCode() {

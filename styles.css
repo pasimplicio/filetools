@@ -592,6 +592,9 @@ h3 {
 }
 
 .file-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--border);
@@ -646,6 +649,95 @@ h3 {
 .file-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.pdf-preview {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-strong) 72%, var(--surface));
+  padding: 12px;
+}
+
+.input-preview {
+  margin-top: 2px;
+}
+
+.pdf-preview-header,
+.result-preview-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.pdf-preview-header strong,
+.result-preview-heading strong {
+  overflow-wrap: anywhere;
+}
+
+.pdf-preview-header span,
+.result-preview-heading span {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.pdf-preview-pages,
+.result-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pdf-page-thumb {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-width: 92px;
+}
+
+.pdf-page-thumb canvas {
+  max-width: 140px;
+  max-height: 184px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(16, 32, 29, 0.08);
+}
+
+.pdf-page-thumb figcaption,
+.pdf-more-pages {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.pdf-more-pages {
+  display: grid;
+  place-items: center;
+  min-width: 92px;
+  min-height: 132px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+}
+
+.result-preview-wrap {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.result-preview-item {
+  display: grid;
+  gap: 8px;
+  min-width: min(100%, 240px);
 }
 
 .option-grid {
@@ -872,6 +964,25 @@ h3 {
   .site-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .file-item {
+    grid-template-columns: 1fr;
+  }
+
+  .file-actions {
+    justify-content: flex-start;
+  }
+
+  .pdf-preview-header,
+  .result-preview-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pdf-page-thumb canvas {
+    max-width: 118px;
+    max-height: 156px;
   }
 
   .tool-workbench,
