@@ -610,6 +610,25 @@ h3 {
   color: var(--muted);
 }
 
+.check-row {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: start;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  padding: 12px;
+  color: var(--muted);
+}
+
+.check-row input {
+  width: 20px;
+  min-height: 20px;
+  margin: 2px auto 0;
+  accent-color: var(--primary);
+}
+
 .progress-wrap {
   margin-top: 18px;
 }

@@ -10,10 +10,14 @@ Site estatico com ferramentas online para PDF, imagem, audio de video e QR Code,
 - Converter imagem para JPG, PNG e WebP
 - Comprimir imagem
 - Redimensionar imagem
+- Converter video MP4, MOV, MKV e outros formatos quando reproduziveis pelo navegador
+- Downloader de YouTube, Instagram, TikTok e outras plataformas, preparado para backend/API autorizada
+- Conversor YouTube para MP3, preparado para backend/API autorizada
+- Cortador de video local
 - Extrair audio de video local
 - Gerar QR Code
 
-As ferramentas de imagem rodam com APIs nativas do navegador. PDF usa `pdf-lib` carregado sob demanda por CDN. QR Code usa biblioteca carregada sob demanda por CDN. Extracao de audio usa Web Audio e MediaRecorder quando o navegador suporta o video enviado.
+As ferramentas de imagem rodam com APIs nativas do navegador. PDF usa `pdf-lib` carregado sob demanda por CDN. QR Code usa biblioteca carregada sob demanda por CDN. Video local usa `MediaRecorder`, `captureStream` e Web Audio quando o navegador suporta o formato enviado. Downloaders de plataformas e YouTube para MP3 exigem backend/API autorizada, alem de validacao de permissao de uso do conteudo.
 
 ## Estrutura
 

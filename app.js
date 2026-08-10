@@ -118,6 +118,119 @@ const tools = [
       </div>`
   },
   {
+    id: "convert-video",
+    title: "Converter video",
+    category: "media",
+    accept: ".mp4,.mov,.mkv,.webm,.avi,.m4v,video/*",
+    multiple: false,
+    mode: "Video local quando suportado",
+    description: "Converta videos reproduziveis pelo navegador para WebM ou MP4 quando disponivel.",
+    steps: ["Escolha um video local.", "Selecione o formato de saida.", "Processe e baixe o novo arquivo."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="videoFormat">Formato de saida</label>
+          <select id="videoFormat" name="videoFormat">
+            <option value="video/webm;codecs=vp9,opus">WebM VP9</option>
+            <option value="video/webm;codecs=vp8,opus">WebM VP8</option>
+            <option value="video/mp4">MP4, se o navegador suportar</option>
+            <option value="backend/mov">MOV, requer backend FFmpeg</option>
+            <option value="backend/mkv">MKV, requer backend FFmpeg</option>
+          </select>
+          <small>MP4, MOV e MKV dependem do suporte do navegador ou de backend FFmpeg.</small>
+        </div>
+      </div>`
+  },
+  {
+    id: "platform-downloader",
+    title: "Downloader de plataformas",
+    category: "media",
+    accept: "",
+    multiple: false,
+    mode: "Requer backend/API autorizada",
+    description: "Fluxo para YouTube, Instagram, TikTok e outras plataformas com validacao de uso permitido.",
+    steps: ["Cole o link publico.", "Confirme que voce tem direito de baixar.", "Use uma API/backend autorizado para gerar o arquivo."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="platformUrl">Link do video</label>
+          <input id="platformUrl" name="platformUrl" type="url" placeholder="https://...">
+        </div>
+        <div class="field">
+          <label for="platformName">Plataforma</label>
+          <select id="platformName" name="platformName">
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="tiktok">TikTok</option>
+            <option value="twitter">X / Twitter</option>
+            <option value="other">Outra</option>
+          </select>
+        </div>
+      </div>
+      <label class="check-row">
+        <input id="usageRights" name="usageRights" type="checkbox" value="yes">
+        <span>Confirmo que tenho permissao para baixar este conteudo ou que ele e de minha autoria, dominio publico ou licenciado.</span>
+      </label>`
+  },
+  {
+    id: "youtube-mp3",
+    title: "YouTube para MP3",
+    category: "media",
+    accept: "",
+    multiple: false,
+    mode: "Requer backend/API autorizada",
+    description: "Fluxo preparado para converter conteudo permitido do YouTube em audio MP3 via backend.",
+    steps: ["Cole o link do YouTube.", "Confirme permissao de uso.", "A conversao MP3 deve rodar no backend."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="youtubeUrl">Link do YouTube</label>
+          <input id="youtubeUrl" name="youtubeUrl" type="url" placeholder="https://youtube.com/watch?v=...">
+        </div>
+        <div class="field">
+          <label for="audioQuality">Qualidade</label>
+          <select id="audioQuality" name="audioQuality">
+            <option value="128">MP3 128 kbps</option>
+            <option value="192">MP3 192 kbps</option>
+            <option value="256">MP3 256 kbps</option>
+          </select>
+        </div>
+      </div>
+      <label class="check-row">
+        <input id="youtubeRights" name="youtubeRights" type="checkbox" value="yes">
+        <span>Confirmo que tenho permissao para converter este conteudo.</span>
+      </label>`
+  },
+  {
+    id: "trim-video",
+    title: "Cortador de video",
+    category: "media",
+    accept: ".mp4,.mov,.mkv,.webm,.avi,.m4v,video/*",
+    multiple: false,
+    mode: "Corte local quando suportado",
+    description: "Corte trechos de videos locais que o navegador consegue reproduzir.",
+    steps: ["Escolha um video local.", "Defina inicio e fim em segundos.", "Baixe o trecho renderizado."],
+    options: () => `
+      <div class="option-grid">
+        <div class="field">
+          <label for="startTime">Inicio em segundos</label>
+          <input id="startTime" name="startTime" type="number" min="0" step="0.1" value="0">
+        </div>
+        <div class="field">
+          <label for="endTime">Fim em segundos</label>
+          <input id="endTime" name="endTime" type="number" min="0" step="0.1" placeholder="Ate o final">
+        </div>
+        <div class="field">
+          <label for="trimFormat">Formato de saida</label>
+          <select id="trimFormat" name="trimFormat">
+            <option value="video/webm;codecs=vp9,opus">WebM VP9</option>
+            <option value="video/webm;codecs=vp8,opus">WebM VP8</option>
+            <option value="video/mp4">MP4, se o navegador suportar</option>
+          </select>
+        </div>
+      </div>`
+  },
+  {
     id: "extract-audio",
     title: "Extrair audio de video",
     category: "media",
@@ -248,7 +361,7 @@ function setActiveTool(id) {
   elements.processingMode.textContent = tool.mode;
   elements.fileInput.accept = tool.accept;
   elements.fileInput.multiple = tool.multiple;
-  elements.dropZone.hidden = tool.id === "qr-code";
+  elements.dropZone.hidden = ["qr-code", "platform-downloader", "youtube-mp3"].includes(tool.id);
   elements.optionsPanel.innerHTML = tool.options();
   elements.howItWorks.innerHTML = tool.steps.map((step) => `<li>${step}</li>`).join("");
 
@@ -312,7 +425,7 @@ function showResult(title, description, links) {
   elements.resultPanel.innerHTML = `
     <strong>${title}</strong>
     <p class="muted">${description}</p>
-    <div class="result-actions">
+    <div class="result-actions" ${links.length ? "" : "hidden"}>
       ${links.map((link) => `<a class="download-link" href="${link.url}" download="${link.name}">${link.label || "Baixar"}</a>`).join("")}
     </div>
   `;
@@ -341,7 +454,8 @@ async function runTool() {
   elements.runButton.disabled = true;
 
   try {
-    if (state.active.id !== "qr-code" && !state.files.length) {
+    const toolsWithoutFiles = ["qr-code", "platform-downloader", "youtube-mp3"];
+    if (!toolsWithoutFiles.includes(state.active.id) && !state.files.length) {
       throw new Error("Escolha pelo menos um arquivo antes de processar.");
     }
 
@@ -352,6 +466,10 @@ async function runTool() {
     if (state.active.id === "compress-pdf") result = await compressPdf(data);
     if (state.active.id === "merge-pdf") result = await mergePdf();
     if (state.active.id === "split-pdf") result = await splitPdf(data);
+    if (state.active.id === "convert-video") result = await convertVideo(data);
+    if (state.active.id === "trim-video") result = await trimVideo(data);
+    if (state.active.id === "platform-downloader") result = await preparePlatformDownload(data);
+    if (state.active.id === "youtube-mp3") result = await prepareYoutubeMp3(data);
     if (state.active.id === "extract-audio") result = await extractAudio();
     if (state.active.id === "qr-code") result = await generateQr(data);
 
@@ -458,6 +576,72 @@ async function splitPdf(data) {
   };
 }
 
+async function convertVideo(data) {
+  const file = state.files[0];
+  const mimeType = resolveVideoMime(data.videoFormat);
+  const blob = await recordVideoSegment(file, { mimeType });
+  const extension = videoExtensionFor(mimeType);
+  const name = `${baseName(file.name)}-convertido.${extension}`;
+
+  return {
+    title: "Video convertido",
+    description: `Arquivo gerado localmente em ${extension.toUpperCase()}. Tamanho: ${formatBytes(blob.size)}.`,
+    links: [{ url: makeUrl(blob), name, label: "Baixar video" }]
+  };
+}
+
+async function trimVideo(data) {
+  const file = state.files[0];
+  const mimeType = resolveVideoMime(data.trimFormat);
+  const start = Math.max(0, Number(data.startTime || 0));
+  const end = data.endTime === "" ? null : Number(data.endTime);
+
+  if (end !== null && end <= start) {
+    throw new Error("O tempo final precisa ser maior que o tempo inicial.");
+  }
+
+  const blob = await recordVideoSegment(file, { mimeType, start, end });
+  const extension = videoExtensionFor(mimeType);
+  const name = `${baseName(file.name)}-corte.${extension}`;
+
+  return {
+    title: "Video cortado",
+    description: `Trecho renderizado localmente em ${extension.toUpperCase()}. Tamanho: ${formatBytes(blob.size)}.`,
+    links: [{ url: makeUrl(blob), name, label: "Baixar corte" }]
+  };
+}
+
+async function preparePlatformDownload(data) {
+  const url = validateUrl(data.platformUrl, "Cole um link valido da plataforma.");
+  if (data.usageRights !== "yes") {
+    throw new Error("Confirme que voce tem permissao para baixar este conteudo.");
+  }
+
+  setProgress(100, "Backend necessario");
+  return {
+    title: "Fluxo preparado para backend",
+    description: `Link validado para ${data.platformName || "plataforma"}: ${url.hostname}. Para baixar, conecte uma API/backend autorizado e respeite os termos da plataforma e direitos autorais.`,
+    links: []
+  };
+}
+
+async function prepareYoutubeMp3(data) {
+  const url = validateUrl(data.youtubeUrl, "Cole um link valido do YouTube.");
+  if (!/(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(url.hostname)) {
+    throw new Error("Use um link do YouTube ou youtu.be.");
+  }
+  if (data.youtubeRights !== "yes") {
+    throw new Error("Confirme que voce tem permissao para converter este conteudo.");
+  }
+
+  setProgress(100, "Backend necessario");
+  return {
+    title: "Conversao MP3 preparada",
+    description: `Link do YouTube validado. A conversao para MP3 ${data.audioQuality || "128"} kbps deve ser feita em backend autorizado, com conteudo proprio, licenciado ou permitido.`,
+    links: []
+  };
+}
+
 async function extractAudio() {
   const file = state.files[0];
   const video = document.createElement("video");
@@ -510,6 +694,63 @@ async function extractAudio() {
     description: `Arquivo de audio WebM gerado localmente. Tamanho: ${formatBytes(blob.size)}.`,
     links: [{ url: makeUrl(blob), name, label: "Baixar audio" }]
   };
+}
+
+async function recordVideoSegment(file, options) {
+  const video = document.createElement("video");
+  const objectUrl = URL.createObjectURL(file);
+  video.src = objectUrl;
+  video.preload = "auto";
+  video.playsInline = true;
+  video.volume = 0;
+
+  await waitFor(video, "loadedmetadata");
+  if (!video.duration || Number.isNaN(video.duration)) {
+    URL.revokeObjectURL(objectUrl);
+    throw new Error("O navegador nao conseguiu ler a duracao deste video.");
+  }
+
+  const start = Math.min(options.start || 0, Math.max(0, video.duration - 0.1));
+  const end = options.end ? Math.min(options.end, video.duration) : video.duration;
+  const captureStream = video.captureStream || video.mozCaptureStream;
+
+  if (!captureStream || !window.MediaRecorder) {
+    URL.revokeObjectURL(objectUrl);
+    throw new Error("Este navegador nao oferece suporte suficiente para converter ou cortar video localmente.");
+  }
+
+  const stream = captureStream.call(video);
+  const recorder = new MediaRecorder(stream, { mimeType: options.mimeType });
+  const chunks = [];
+
+  recorder.addEventListener("dataavailable", (event) => {
+    if (event.data.size > 0) chunks.push(event.data);
+  });
+
+  const stopped = waitFor(recorder, "stop");
+  const finished = new Promise((resolve, reject) => {
+    video.addEventListener("timeupdate", () => {
+      const elapsed = Math.max(0, video.currentTime - start);
+      const total = Math.max(0.1, end - start);
+      setProgress(Math.min(92, (elapsed / total) * 92), "Renderizando video");
+      if (video.currentTime >= end) resolve();
+    });
+    video.addEventListener("ended", resolve, { once: true });
+    video.addEventListener("error", () => reject(new Error("Erro ao reproduzir este video no navegador.")), { once: true });
+  });
+
+  setProgress(8, "Preparando video");
+  recorder.start(500);
+  video.currentTime = start;
+  await video.play();
+  await finished;
+  video.pause();
+  recorder.stop();
+  await stopped;
+  stream.getTracks().forEach((track) => track.stop());
+  URL.revokeObjectURL(objectUrl);
+
+  return new Blob(chunks, { type: options.mimeType });
 }
 
 async function generateQr(data) {
@@ -638,6 +879,26 @@ function waitFor(target, eventName) {
   });
 }
 
+function resolveVideoMime(value) {
+  if (!value || value.startsWith("backend/")) {
+    throw new Error("Este formato precisa de backend com FFmpeg. No frontend estatico, use WebM ou MP4 quando suportado pelo navegador.");
+  }
+  if (!window.MediaRecorder || !MediaRecorder.isTypeSupported(value)) {
+    throw new Error(`Seu navegador nao suporta gerar ${value}. Tente WebM VP8 ou WebM VP9.`);
+  }
+  return value;
+}
+
+function validateUrl(value, message) {
+  try {
+    const url = new URL(String(value || "").trim());
+    if (!["http:", "https:"].includes(url.protocol)) throw new Error("invalid");
+    return url;
+  } catch {
+    throw new Error(message);
+  }
+}
+
 function formatBytes(bytes) {
   if (!bytes) return "0 B";
   const units = ["B", "KB", "MB", "GB"];
@@ -651,6 +912,11 @@ function baseName(name) {
 
 function extensionFor(format) {
   return { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }[format] || "webp";
+}
+
+function videoExtensionFor(format) {
+  if (format.includes("mp4")) return "mp4";
+  return "webm";
 }
 
 function escapeHtml(value) {

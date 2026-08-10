@@ -108,29 +108,27 @@ O MVP deve evitar ferramentas com risco juridico alto, especialmente downloaders
 4. Converter imagem para JPG, PNG e WebP
 5. Comprimir imagem
 6. Redimensionar imagem
-7. Remover EXIF/metadados de imagem
-8. Gerar QR Code
-9. Compactar ZIP
-10. Descompactar ZIP
-11. Converter unidades de arquivo, bitrate e resolucao
-12. Extrair audio de video local
+7. Converter video MP4, MOV, MKV e outros formatos quando suportado pelo navegador
+8. Downloader de YouTube, Instagram, TikTok e outras plataformas, com backend/API autorizada
+9. Conversor YouTube para MP3, com backend/API autorizada
+10. Cortador de video
+11. Extrair audio de video local
+12. Gerar QR Code
 
 ### Ferramentas para segunda onda
 
-- Cortador de video
 - Compressor de video
-- Conversor MP4, MOV, MKV
 - Editor basico de imagem
 - Assinatura simples em PDF
 - Proteger PDF com senha
 - OCR de imagem/PDF
 
-### Ferramentas que devem esperar
+### Ferramentas com cautela juridica
 
 - Downloader de YouTube, Instagram, TikTok e outras plataformas.
 - Conversor YouTube para MP3.
 
-Essas funcionalidades geram trafego, mas tambem aumentam risco juridico, risco de bloqueios e dificuldade de monetizacao com anuncios.
+Essas funcionalidades geram trafego, mas tambem aumentam risco juridico, risco de bloqueios e dificuldade de monetizacao com anuncios. Na primeira versao, elas devem aparecer como fluxo preparado para backend/API autorizada, exigindo confirmacao de permissao de uso do conteudo.
 
 ## 6. Fluxos principais
 
