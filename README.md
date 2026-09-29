@@ -1,35 +1,16 @@
 # FileTools
 
-Site estatico com ferramentas online para PDF, preparado para deploy no Vercel via GitHub. As ferramentas ativas usam bibliotecas open source no navegador; as demais categorias ficam visiveis como roadmap e marcadas como "Em breve".
+Interface web da Suite de Midia baseada no sistema origem em `C:\midias_suite`.
 
-## Ferramentas ativas
+## Funcoes mantidas
 
-- Comprimir PDF
-- Juntar PDF
-- Dividir PDF
-- Remover paginas
-- Girar PDF
+- Extrair Frames
+- Downloader
+- Transcricao
+- Separar Voz
+- Configuracoes
 
-As ferramentas de PDF seguem um fluxo parecido com suites como iLovePDF: escolha a ferramenta, envie arquivos, veja a previa, ajuste as opcoes e processe. O processamento usa `pdf-lib` e as previas usam `pdf.js`, ambos carregados sob demanda no navegador.
-
-## Em breve
-
-- Organizar PDF visualmente
-- PDF para JPG
-- JPG para PDF
-- Proteger PDF
-- Desbloquear PDF
-- Converter imagem para JPG, PNG e WebP
-- Comprimir imagem
-- Redimensionar imagem
-- Converter video MP4, MOV, MKV e outros formatos quando reproduziveis pelo navegador
-- Downloader de YouTube, Instagram, TikTok e outras plataformas, preparado para backend/API autorizada
-- Conversor YouTube para MP3, preparado para backend/API autorizada
-- Cortador de video local
-- Extrair audio de video local
-- Gerar QR Code
-
-As ferramentas futuras permanecem desativadas na interface ate serem implementadas.
+O sistema origem e um app desktop Python/Tkinter. Ele usa dependencias locais como OpenCV, yt-dlp, FFmpeg, Whisper, Spleeter e spotdl. Nesta versao web estatica, a extracao de frames de video local roda no navegador. As demais telas preservam o fluxo e as opcoes da origem, mas precisam de backend para executar o processamento real.
 
 ## Estrutura
 
@@ -38,6 +19,7 @@ As ferramentas futuras permanecem desativadas na interface ate serem implementad
 |-- index.html
 |-- styles.css
 |-- app.js
+|-- server.js
 |-- manifest.webmanifest
 |-- sw.js
 |-- icon.svg
@@ -47,31 +29,18 @@ As ferramentas futuras permanecem desativadas na interface ate serem implementad
 
 ## Rodar localmente
 
-Abrir `index.html` no navegador ja funciona para interface, previas e processamento local. Para testar service worker/PWA, use:
-
 ```bash
-npx serve .
+npm run dev
 ```
 
-## Deploy no Vercel com GitHub
+URL padrao:
 
-1. Envie este projeto para o repositorio `pasimplicio/filetools`.
-2. No Vercel, clique em **Add New Project**.
-3. Importe `pasimplicio/filetools`.
-4. Use framework preset **Other**.
-5. Deixe build command vazio.
-6. Deixe output directory vazio ou `.`.
-7. Clique em **Deploy**.
-
-## Comandos Git sugeridos
-
-```bash
-git init
-git remote add origin https://github.com/pasimplicio/filetools.git
-git add .
-git commit -m "Initial FileTools static site"
-git branch -M main
-git push -u origin main
+```text
+http://localhost:5173/
 ```
 
-Se o repositorio ja tiver commits, use `git pull --rebase origin main` antes do push.
+## Validar
+
+```bash
+npm run check
+```

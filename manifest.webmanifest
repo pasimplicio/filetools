@@ -1,11 +1,11 @@
 {
-  "name": "FileTools",
+  "name": "FileTools Suite de Midia",
   "short_name": "FileTools",
-  "description": "Ferramentas online para PDF, imagem, audio de video e QR Code.",
+  "description": "Ferramentas de midia baseadas no sistema origem.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7faf9",
-  "theme_color": "#0f766e",
+  "background_color": "#0f1217",
+  "theme_color": "#111827",
   "icons": [
     {
       "src": "icon.svg",
