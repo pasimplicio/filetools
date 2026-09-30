@@ -9,6 +9,8 @@ const icons = {
 
 const cdn = {
   pdfLib: "https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js",
+  pdfJs: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs",
+  pdfJsWorker: "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs",
 };
 
 const toolData = [
@@ -73,12 +75,12 @@ const toolData = [
     icon: icons.pdf,
     badge: "Executa no navegador",
     available: true,
-    description: "Edita os dados (metadados) de um PDF: titulo, autor, assunto, palavras-chave, datas e idioma.",
+    description: "Altera o texto das paginas do PDF, adiciona texto novo e edita os dados do documento.",
     reference: [
-      "Selecionar um PDF local.",
-      "Ler os metadados atuais do documento.",
-      "Editar titulo, autor, assunto, palavras-chave, criador, produtor, idioma e datas.",
-      "Opcao de limpar todos os metadados.",
+      "Visualizar as paginas do PDF no navegador.",
+      "Clicar em um texto para altera-lo ou apaga-lo.",
+      "Adicionar texto novo com tamanho e cor.",
+      "Editar titulo, autor, assunto, palavras-chave, idioma e datas.",
       "Baixar a nova copia do PDF.",
     ],
   },
@@ -103,6 +105,8 @@ const state = {
   history: JSON.parse(localStorage.getItem("filetools-media-history") || "[]"),
   settings: JSON.parse(localStorage.getItem("filetools-media-settings") || "{}"),
   frameResults: [],
+  pdfMode: "content",
+  pdfEditor: null,
 };
 
 const els = {
@@ -584,6 +588,368 @@ const pdfFields = [
 ];
 
 function renderPdfForm() {
+  if (state.pdfMode === "meta") renderPdfMetaForm();
+  else renderPdfContentForm();
+
+  els.form.insertAdjacentHTML(
+    "afterbegin",
+    `
+      <div class="segmented" role="tablist" aria-label="Modo de edicao">
+        <button type="button" role="tab" data-pdf-mode="content" aria-selected="${state.pdfMode !== "meta"}">Conteudo</button>
+        <button type="button" role="tab" data-pdf-mode="meta" aria-selected="${state.pdfMode === "meta"}">Dados do documento</button>
+      </div>
+    `
+  );
+  els.form.querySelectorAll("[data-pdf-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (state.pdfMode === button.dataset.pdfMode) return;
+      state.pdfMode = button.dataset.pdfMode;
+      clearResult();
+      renderPdfForm();
+    });
+  });
+}
+
+function renderPdfContentForm() {
+  state.pdfEditor = null;
+  els.form.innerHTML = `
+    ${fileDrop("pdfContentFile", ".pdf,application/pdf", false, "Selecionar PDF")}
+    <div class="pdf-toolbar" id="pdfToolbar" hidden>
+      <button class="button" type="button" id="pdfAddText" aria-pressed="false">Adicionar texto</button>
+      <div class="field inline">
+        <label for="pdfTextSize">Tamanho</label>
+        <input id="pdfTextSize" type="number" min="4" max="96" value="12">
+      </div>
+      <div class="field inline">
+        <label for="pdfTextColor">Cor</label>
+        <input id="pdfTextColor" type="color" value="#000000">
+      </div>
+      <span class="muted" id="pdfEditCount">Nenhuma alteracao</span>
+    </div>
+    <p class="muted" id="pdfEditorHint" hidden>
+      Clique em um texto para altera-lo; deixe vazio para apagar. Use "Adicionar texto" e clique na pagina para inserir texto novo.
+      Tamanho e cor valem para o texto selecionado ou o proximo texto adicionado.
+    </p>
+    <div class="pdf-pages" id="pdfPageList"></div>
+    <div class="action-row">
+      <button class="button" type="button" id="clearPdfContent">Limpar</button>
+      <button class="button primary" type="submit" id="savePdfContent" disabled>Salvar PDF</button>
+    </div>
+  `;
+
+  bindFileList("pdfContentFile");
+  document.querySelector("#clearPdfContent").addEventListener("click", () => {
+    clearResult();
+    renderPdfForm();
+  });
+  document.querySelector("#pdfContentFile").addEventListener("change", loadPdfContent);
+  document.querySelector("#pdfAddText").addEventListener("click", (event) => {
+    const active = event.currentTarget.getAttribute("aria-pressed") !== "true";
+    event.currentTarget.setAttribute("aria-pressed", String(active));
+    document.querySelector("#pdfPageList").classList.toggle("adding", active);
+  });
+  document.querySelector("#pdfTextSize").addEventListener("input", (event) => {
+    const box = state.pdfEditor?.focused;
+    if (!box) return;
+    box.size = Math.max(4, Number(event.target.value) || 12);
+    styleEditBox(box);
+    updatePdfEditCount();
+  });
+  document.querySelector("#pdfTextColor").addEventListener("input", (event) => {
+    const box = state.pdfEditor?.focused;
+    if (!box) return;
+    box.color = event.target.value;
+    styleEditBox(box);
+    updatePdfEditCount();
+  });
+  els.form.onsubmit = handlePdfContentSubmit;
+}
+
+async function loadPdfContent() {
+  const file = document.querySelector("#pdfContentFile").files[0];
+  const container = document.querySelector("#pdfPageList");
+  if (!file) return;
+  clearResult();
+  container.innerHTML = "";
+  document.querySelector("#savePdfContent").disabled = true;
+
+  try {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await ensurePdfJs();
+    const doc = await window.pdfjsLib.getDocument({ data: bytes.slice() }).promise;
+    const editor = { file, bytes, boxes: [], focused: null };
+    state.pdfEditor = editor;
+
+    const maxPages = Math.min(doc.numPages, 60);
+    const width = Math.min(els.form.clientWidth || 800, 900);
+
+    for (let number = 1; number <= maxPages; number += 1) {
+      if (state.pdfEditor !== editor) return;
+      setProgress((number / maxPages) * 100, `Carregando pagina ${number} / ${maxPages}`);
+      await renderEditablePage(doc, number, width, container, editor);
+    }
+
+    if (doc.numPages > maxPages) {
+      container.insertAdjacentHTML(
+        "beforeend",
+        `<p class="notice"><strong>Somente as primeiras ${maxPages} paginas sao exibidas.</strong>As demais paginas sao mantidas sem alteracao.</p>`
+      );
+    }
+
+    document.querySelector("#pdfToolbar").hidden = false;
+    document.querySelector("#pdfEditorHint").hidden = false;
+    document.querySelector("#savePdfContent").disabled = false;
+    updatePdfEditCount();
+  } catch (error) {
+    showResult(`<p class="notice"><strong>Falha ao abrir o PDF.</strong>${escapeHtml(pdfErrorMessage(error))}</p>`);
+  } finally {
+    resetProgress();
+  }
+}
+
+async function renderEditablePage(doc, number, width, container, editor) {
+  const page = await doc.getPage(number);
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: width / base.width });
+  const ratio = window.devicePixelRatio || 1;
+
+  const wrap = document.createElement("div");
+  wrap.className = "pdf-page";
+  wrap.style.width = `${viewport.width}px`;
+  wrap.style.height = `${viewport.height}px`;
+  wrap.setAttribute("aria-label", `Pagina ${number}`);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(viewport.width * ratio);
+  canvas.height = Math.floor(viewport.height * ratio);
+  const context = canvas.getContext("2d");
+  context.scale(ratio, ratio);
+  await page.render({ canvasContext: context, viewport }).promise;
+
+  const layer = document.createElement("div");
+  layer.className = "pdf-text-layer";
+  wrap.append(canvas, layer);
+  container.append(wrap);
+
+  const content = await page.getTextContent();
+  content.items.forEach((item) => {
+    if (!item.str || !item.str.trim()) return;
+    const tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+    const fontHeight = Math.hypot(tx[2], tx[3]);
+    if (fontHeight < 2) return;
+
+    const style = content.styles[item.fontName] || {};
+    const box = {
+      page: number - 1,
+      original: item.str,
+      text: item.str,
+      x: item.transform[4],
+      y: item.transform[5],
+      size: Math.hypot(item.transform[2], item.transform[3]),
+      baseSize: Math.hypot(item.transform[2], item.transform[3]),
+      pdfWidth: item.width,
+      family: style.fontFamily || "sans-serif",
+      color: "#000000",
+      isNew: false,
+      scale: viewport.scale,
+    };
+    box.el = createEditBox(box, {
+      left: tx[4],
+      top: tx[5] - fontHeight,
+      width: item.width * viewport.scale,
+      height: fontHeight,
+    });
+    layer.append(box.el);
+    editor.boxes.push(box);
+  });
+
+  layer.addEventListener("click", (event) => {
+    if (event.target !== layer || !container.classList.contains("adding")) return;
+    const rect = layer.getBoundingClientRect();
+    const [x, y] = viewport.convertToPdfPoint(event.clientX - rect.left, event.clientY - rect.top);
+    const size = Math.max(4, Number(document.querySelector("#pdfTextSize").value) || 12);
+    const box = {
+      page: number - 1,
+      original: "",
+      text: "",
+      x,
+      y: y - size * 0.8,
+      size,
+      baseSize: size,
+      pdfWidth: 0,
+      family: "sans-serif",
+      color: document.querySelector("#pdfTextColor").value,
+      isNew: true,
+      scale: viewport.scale,
+    };
+    box.el = createEditBox(box, {
+      left: event.clientX - rect.left,
+      top: event.clientY - rect.top,
+      width: 0,
+      height: size * viewport.scale,
+    });
+    layer.append(box.el);
+    editor.boxes.push(box);
+    document.querySelector("#pdfAddText").setAttribute("aria-pressed", "false");
+    container.classList.remove("adding");
+    box.el.focus();
+  });
+}
+
+function createEditBox(box, rect) {
+  const el = document.createElement("span");
+  el.className = `pdf-edit-box${box.isNew ? " new" : ""}`;
+  try {
+    el.contentEditable = "plaintext-only";
+  } catch {
+    el.contentEditable = "true";
+  }
+  el.spellcheck = false;
+  el.textContent = box.text;
+  el.style.left = `${rect.left}px`;
+  el.style.top = `${rect.top}px`;
+  el.style.minWidth = `${Math.max(rect.width, box.isNew ? 40 : 4)}px`;
+  el.style.fontFamily = box.family;
+  styleEditBox(box, el);
+
+  el.addEventListener("focus", () => {
+    state.pdfEditor.focused = box;
+    document.querySelector("#pdfTextSize").value = Math.round(box.size * 10) / 10;
+    document.querySelector("#pdfTextColor").value = box.color;
+  });
+  el.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === "Escape") {
+      event.preventDefault();
+      el.blur();
+    }
+  });
+  el.addEventListener("input", () => {
+    box.text = el.textContent.replace(/\s*\n\s*/g, " ");
+    styleEditBox(box);
+    updatePdfEditCount();
+  });
+  el.addEventListener("blur", () => {
+    if (box.isNew && !box.text.trim()) {
+      el.remove();
+      state.pdfEditor.boxes = state.pdfEditor.boxes.filter((item) => item !== box);
+      updatePdfEditCount();
+    }
+  });
+  return el;
+}
+
+function isBoxChanged(box) {
+  if (box.isNew) return Boolean(box.text.trim());
+  return box.text !== box.original || box.color !== "#000000" || box.size !== box.baseSize;
+}
+
+function styleEditBox(box, el = box.el) {
+  el.style.fontSize = `${box.size * box.scale}px`;
+  el.style.lineHeight = `${box.size * box.scale}px`;
+  el.style.color = box.color;
+  el.classList.toggle("edited", isBoxChanged(box));
+}
+
+function updatePdfEditCount() {
+  const editor = state.pdfEditor;
+  const label = document.querySelector("#pdfEditCount");
+  if (!editor || !label) return;
+  const count = editor.boxes.filter(isBoxChanged).length;
+  label.textContent = count ? `${count} alteracao(oes)` : "Nenhuma alteracao";
+}
+
+async function handlePdfContentSubmit(event) {
+  event.preventDefault();
+  const editor = state.pdfEditor;
+  if (!editor) {
+    showResult('<p class="notice"><strong>Selecione um PDF.</strong>Escolha um arquivo local antes de salvar.</p>');
+    return;
+  }
+
+  const changes = editor.boxes.filter(isBoxChanged);
+  if (!changes.length) {
+    showResult('<p class="notice"><strong>Nenhuma alteracao.</strong>Edite ou adicione um texto antes de salvar.</p>');
+    return;
+  }
+
+  try {
+    setProgress(30, "Aplicando alteracoes...");
+    const pdf = await openPdfBytes(editor.bytes);
+    const pages = pdf.getPages();
+    const fonts = {
+      "sans-serif": await pdf.embedFont(PDFLib.StandardFonts.Helvetica),
+      serif: await pdf.embedFont(PDFLib.StandardFonts.TimesRoman),
+      monospace: await pdf.embedFont(PDFLib.StandardFonts.Courier),
+    };
+    let replaced = 0;
+
+    changes.forEach((box) => {
+      const page = pages[box.page];
+      const font = fonts[box.family] || fonts["sans-serif"];
+      const text = encodableText(font, box.text.trim());
+      if (text !== box.text.trim()) replaced += 1;
+
+      if (!box.isNew) {
+        page.drawRectangle({
+          x: box.x - 1,
+          y: box.y - box.baseSize * 0.28,
+          width: box.pdfWidth + 2,
+          height: box.baseSize * 1.2,
+          color: PDFLib.rgb(1, 1, 1),
+        });
+      }
+      if (text) {
+        page.drawText(text, { x: box.x, y: box.y, size: box.size, font, color: hexToRgb(box.color) });
+      }
+    });
+
+    setProgress(70, "Gerando PDF...");
+    const bytes = await pdf.save();
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    const name = `${sanitizeName(editor.file.name.replace(/\.pdf$/i, ""))}_editado.pdf`;
+
+    showResult(`
+      <strong>${changes.length} alteracao(oes) aplicada(s).</strong>
+      ${replaced ? '<p class="muted">Alguns caracteres nao suportados pela fonte padrao foram trocados por "?".</p>' : ""}
+      <div class="file-line"><span>${name}</span><small>${formatBytes(bytes.length)}</small></div>
+      <div class="result-actions">
+        <a class="button primary" href="${url}" download="${name}">Baixar PDF</a>
+      </div>
+    `);
+    saveHistory({ title: "Editar PDF", detail: `Conteudo de ${escapeHtml(editor.file.name)}`, date: Date.now() });
+  } catch (error) {
+    showResult(`<p class="notice"><strong>Falha ao salvar o PDF.</strong>${escapeHtml(pdfErrorMessage(error))}</p>`);
+  } finally {
+    resetProgress();
+  }
+}
+
+function encodableText(font, text) {
+  return Array.from(text)
+    .map((char) => {
+      try {
+        font.encodeText(char);
+        return char;
+      } catch {
+        return "?";
+      }
+    })
+    .join("");
+}
+
+function hexToRgb(hex) {
+  const value = parseInt(hex.slice(1), 16);
+  return PDFLib.rgb(((value >> 16) & 255) / 255, ((value >> 8) & 255) / 255, (value & 255) / 255);
+}
+
+function pdfErrorMessage(error) {
+  if (/encrypt|password/i.test(error.message || error.name)) {
+    return "Este PDF esta protegido por senha. Remova a protecao antes de editar.";
+  }
+  return error.message || String(error);
+}
+
+function renderPdfMetaForm() {
   els.form.innerHTML = `
     ${fileDrop("pdfFile", ".pdf,application/pdf", false, "Selecionar PDF")}
     <div class="form-grid">
@@ -719,9 +1085,13 @@ async function handlePdfSubmit(event) {
 }
 
 async function openPdf(file) {
+  return openPdfBytes(await file.arrayBuffer());
+}
+
+async function openPdfBytes(bytes) {
   await ensurePdfLib();
   try {
-    return await PDFLib.PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false });
+    return await PDFLib.PDFDocument.load(bytes, { updateMetadata: false });
   } catch (error) {
     if (/encrypt/i.test(error.message)) {
       throw new Error("Este PDF esta protegido por senha. Remova a protecao antes de editar os dados.");
@@ -754,6 +1124,17 @@ function toDateTimeLocal(date) {
 function escapeHtml(value) {
   const entities = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   return String(value).replace(/[&<>"']/g, (char) => entities[char]);
+}
+
+async function ensurePdfJs() {
+  if (!window.pdfjsLib) {
+    try {
+      window.pdfjsLib = await import(cdn.pdfJs);
+    } catch {
+      throw new Error("Nao foi possivel carregar a biblioteca pdf.js.");
+    }
+  }
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = cdn.pdfJsWorker;
 }
 
 let pdfLibPromise;

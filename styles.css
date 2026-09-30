@@ -545,6 +545,122 @@ h2 {
   padding: 10px 12px;
 }
 
+.segmented {
+  display: inline-flex;
+  justify-self: start;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 4px;
+}
+
+.segmented button {
+  border: 0;
+  border-radius: calc(var(--radius) - 2px);
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 14px;
+  font-weight: 800;
+}
+
+.segmented button[aria-selected="true"] {
+  background: var(--panel-strong);
+  color: var(--text);
+}
+
+.pdf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdf-toolbar[hidden] {
+  display: none;
+}
+
+.pdf-toolbar .button[aria-pressed="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.field.inline {
+  display: flex;
+  align-items: center;
+}
+
+.field.inline input {
+  width: 84px;
+}
+
+.field.inline input[type="color"] {
+  width: 56px;
+  padding: 4px;
+}
+
+.pdf-pages {
+  display: grid;
+  gap: 16px;
+  overflow-x: auto;
+}
+
+.pdf-pages:empty {
+  display: none;
+}
+
+.pdf-page {
+  position: relative;
+  box-shadow: 0 0 0 1px var(--line);
+  background: #ffffff;
+}
+
+.pdf-page canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pdf-text-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.pdf-pages.adding .pdf-text-layer {
+  cursor: crosshair;
+}
+
+.pdf-edit-box {
+  position: absolute;
+  display: inline-block;
+  white-space: pre;
+  padding-bottom: 0.28em;
+  cursor: text;
+  outline: 1px solid transparent;
+}
+
+.pdf-edit-box:not(.edited):not(.new):not(:focus) {
+  color: transparent !important;
+}
+
+.pdf-edit-box:hover {
+  outline-color: rgba(32, 138, 201, 0.6);
+  background: rgba(32, 138, 201, 0.12);
+}
+
+.pdf-edit-box.edited,
+.pdf-edit-box.new,
+.pdf-edit-box:focus {
+  background: #ffffff;
+  outline: 1px dashed #208ac9;
+  box-shadow: none;
+}
+
+.pdf-edit-box.new:not(:focus) {
+  background: transparent;
+}
+
 @media (max-width: 980px) {
   .app-shell {
     grid-template-columns: 1fr;
