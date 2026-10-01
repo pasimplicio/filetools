@@ -1,9 +1,9 @@
-const CACHE_NAME = "filetools-media-v3";
+const CACHE_NAME = "filetools-media-v4";
 const CORE_ASSETS = [
   "/",
   "/index.html",
-  "/styles.css",
-  "/app.js",
+  "/styles.css?v=4",
+  "/app.js?v=4",
   "/manifest.webmanifest",
   "/icon.svg"
 ];

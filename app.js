@@ -666,28 +666,33 @@ function renderPdfContentForm() {
 }
 
 async function loadPdfContent() {
-  const file = document.querySelector("#pdfContentFile").files[0];
+  const input = document.querySelector("#pdfContentFile");
+  const file = input.files[0];
   const container = document.querySelector("#pdfPageList");
   if (!file) return;
   clearResult();
   container.innerHTML = "";
   document.querySelector("#savePdfContent").disabled = true;
+  const editor = { file, bytes: null, boxes: [], focused: null };
+  state.pdfEditor = editor;
+  const isCurrent = () => state.pdfEditor === editor && input.isConnected;
 
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
+    editor.bytes = bytes;
     await ensurePdfJs();
     const doc = await window.pdfjsLib.getDocument({ data: bytes.slice() }).promise;
-    const editor = { file, bytes, boxes: [], focused: null };
-    state.pdfEditor = editor;
+    if (!isCurrent()) return;
 
     const maxPages = Math.min(doc.numPages, 60);
     const width = Math.min(els.form.clientWidth || 800, 900);
 
     for (let number = 1; number <= maxPages; number += 1) {
-      if (state.pdfEditor !== editor) return;
+      if (!isCurrent()) return;
       setProgress((number / maxPages) * 100, `Carregando pagina ${number} / ${maxPages}`);
       await renderEditablePage(doc, number, width, container, editor);
     }
+    if (!isCurrent()) return;
 
     if (doc.numPages > maxPages) {
       container.insertAdjacentHTML(
@@ -701,6 +706,7 @@ async function loadPdfContent() {
     document.querySelector("#savePdfContent").disabled = false;
     updatePdfEditCount();
   } catch (error) {
+    if (!isCurrent()) return;
     showResult(`<p class="notice"><strong>Falha ao abrir o PDF.</strong>${escapeHtml(pdfErrorMessage(error))}</p>`);
   } finally {
     resetProgress();
@@ -1007,25 +1013,36 @@ function renderPdfMetaForm() {
 }
 
 async function loadPdfMetadata() {
-  const file = document.querySelector("#pdfFile").files[0];
+  const input = document.querySelector("#pdfFile");
+  const file = input.files[0];
   if (!file) return;
   clearResult();
 
   try {
     const pdf = await openPdf(file);
+    if (!input.isConnected || input.files[0] !== file) return;
     pdfFields.forEach((field) => {
-      document.querySelector(`#${field.id}`).value = pdf[field.get]() || "";
+      document.querySelector(`#${field.id}`).value = safePdfGet(() => pdf[field.get]()) || "";
     });
-    document.querySelector("#pdfLanguage").value = readPdfLanguage(pdf);
+    document.querySelector("#pdfLanguage").value = safePdfGet(() => readPdfLanguage(pdf)) || "";
     document.querySelector("#pdfPages").value = pdf.getPageCount();
-    document.querySelector("#pdfCreated").value = toDateTimeLocal(pdf.getCreationDate());
-    document.querySelector("#pdfModified").value = toDateTimeLocal(pdf.getModificationDate());
+    document.querySelector("#pdfCreated").value = toDateTimeLocal(safePdfGet(() => pdf.getCreationDate()));
+    document.querySelector("#pdfModified").value = toDateTimeLocal(safePdfGet(() => pdf.getModificationDate()));
     els.form.querySelectorAll("input:disabled, button:disabled").forEach((input) => {
       input.disabled = false;
     });
     document.querySelector("#pdfClear").checked = false;
   } catch (error) {
+    if (!input.isConnected) return;
     showResult(`<p class="notice"><strong>Falha ao ler o PDF.</strong>${escapeHtml(error.message)}</p>`);
+  }
+}
+
+function safePdfGet(read) {
+  try {
+    return read();
+  } catch {
+    return undefined;
   }
 }
 
